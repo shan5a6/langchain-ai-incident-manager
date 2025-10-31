@@ -9,10 +9,10 @@ groups:
         annotations:
           summary: "High CPU Usage detected"
           description: "CPU usage has been above 90% for 1 minute"
-  - name: postgress db down
+  - name: postgres_alerts
     rules:
       - alert: PostgresDown
-        expr: up{job="postgres"} == 0
+        expr: pg_up == 0
         for: 10s
         labels:
           severity: critical
