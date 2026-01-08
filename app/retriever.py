@@ -1,30 +1,30 @@
-# app/retriever.py (MODIFIED)
-from langchain_community.vectorstores import Qdrant
-from langchain_huggingface import HuggingFaceEmbeddings
 from qdrant_client import QdrantClient
+from langchain_qdrant import QdrantVectorStore  # Changed from Qdrant
+from langchain_huggingface import HuggingFaceEmbeddings
 
-# Initialize embeddings
+# Initialize embeddings (globally)
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
-def get_retriever(as_retriever=True): # <--- Added argument
+def get_retriever(as_retriever: bool = True):
     """
-    Returns a Qdrant vectorstore object or a retriever for the 'incidents' collection.
+    Returns a LangChain Qdrant VectorStore or Retriever
     """
-    # Connect to your running Qdrant instance
-    qdrant_client = QdrantClient(url="http://qdrant:6333")
 
-    # Initialize the Qdrant vectorstore
-    vectorstore = Qdrant(
-        client=qdrant_client,
+    client = QdrantClient(
+        url="http://qdrant:6333",
+        timeout=10
+    )
+
+    # Use QdrantVectorStore with the explicit client
+    vectorstore = QdrantVectorStore(
+        client=client,
         collection_name="incidents",
-        embeddings=embeddings
+        embedding=embeddings
     )
 
     if as_retriever:
-        # Return a retriever object (causes error in your environment)
-        return vectorstore.as_retriever()
-    else:
-        # Return the vectorstore object itself (recommended workaround)
-        return vectorstore
+        return vectorstore.as_retriever(search_kwargs={"k": 4})
+
+    return vectorstore
